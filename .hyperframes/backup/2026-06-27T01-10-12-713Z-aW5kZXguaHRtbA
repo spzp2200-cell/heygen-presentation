@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HeyGen & HyperFrames Interactive Presentation</title>
+  <!-- Google Fonts プレミアムタイポグラフィ -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+  
+  <style>
+    /* リセットと基本レイアウト設定 */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      background-color: #030108;
+      color: #ffffff;
+      font-family: 'Inter', sans-serif;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    /* 16:9 巨大ステージコンテナ */
+    #root {
+      position: relative;
+      width: 1920px;
+      height: 1080px;
+      background: radial-gradient(circle at 30% 30%, #160a2b 0%, #030108 100%);
+      overflow: hidden;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+
+    /* 背景の発光装飾（有限アニメーション用） */
+    .bg-glow-effect {
+      position: absolute;
+      width: 800px;
+      height: 800px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(138, 43, 226, 0.12) 0%, transparent 75%);
+      filter: blur(80px);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* 左側のスライドパネルエリア（60%幅） */
+    .slide-panel {
+      position: absolute;
+      left: 80px;
+      top: 90px;
+      width: 1100px;
+      height: 900px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      z-index: 10;
+    }
+
+    /* プレミアムスライドカード */
+    .slide-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 24px;
+      padding: 60px 80px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    /* 右側のアバター配置エリア（40%幅） */
+    .avatar-area {
+      position: absolute;
+      right: 80px;
+      bottom: 0;
+      width: 600px;
+      height: 960px;
+      z-index: 15;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+    }
+
+    /* アバター映像のラッパー（バグ回避のために video に直にアニメーションをかけない） */
+    .avatar-wrapper {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      overflow: hidden;
+      border-radius: 24px;
+    }
+
+    .avatar-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* 仮のアバタープレースホルダー用UI */
+    .avatar-placeholder {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+      border: 2px dashed rgba(255, 255, 255, 0.15);
+      border-radius: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: rgba(255, 255, 255, 0.4);
+      font-size: 20px;
+    }
+
+    /* テキストスタイル */
+    h1, h2, h3 {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      letter-spacing: -1px;
+    }
+
+    .gradient-text-purple {
+      background: linear-gradient(135deg, #e3a9ff 0%, #9e5bfb 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .gradient-text-cyan {
+      background: linear-gradient(135deg, #a0f9ff 0%, #00f0ff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* インタラクティブボタンの定義 */
+    .btn-container {
+      display: flex;
+      gap: 30px;
+      margin-top: 50px;
+    }
+
+    .choice-btn {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      padding: 24px 44px;
+      font-size: 24px;
+      color: white;
+      border-radius: 18px;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    /* ボタン①：アバター5用 */
+    #btn-choice-a {
+      background: linear-gradient(135deg, rgba(0, 240, 255, 0.15) 0%, rgba(0, 128, 128, 0.1) 100%);
+      border-color: rgba(0, 240, 255, 0.4);
+      box-shadow: 0 0 20px rgba(0, 240, 255, 0.1);
+    }
+    #btn-choice-a:hover {
+      background: linear-gradient(135deg, rgba(0, 240, 255, 0.3) 0%, rgba(0, 128, 128, 0.2) 100%);
+      border-color: #00f0ff;
+      box-shadow: 0 0 35px rgba(0, 240, 255, 0.4);
+      transform: translateY(-4px);
+    }
+
+    /* ボタン②：HyperFrames用 */
+    #btn-choice-b {
+      background: linear-gradient(135deg, rgba(138, 43, 226, 0.2) 0%, rgba(75, 0, 130, 0.15) 100%);
+      border-color: rgba(138, 43, 226, 0.4);
+      box-shadow: 0 0 20px rgba(138, 43, 226, 0.1);
+    }
+    #btn-choice-b:hover {
+      background: linear-gradient(135deg, rgba(138, 43, 226, 0.35) 0%, rgba(75, 0, 130, 0.2) 100%);
+      border-color: #8a2be2;
+      box-shadow: 0 0 35px rgba(138, 43, 226, 0.4);
+      transform: translateY(-4px);
+    }
+
+    /* メニューに戻るナビゲーションボタン */
+    .nav-back-btn {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      margin-top: 40px;
+      padding: 14px 28px;
+      font-size: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      background: rgba(255, 255, 255, 0.03);
+      color: #bbb;
+      border-radius: 30px;
+      cursor: pointer;
+      width: fit-content;
+      transition: all 0.3s ease;
+    }
+
+    .nav-back-btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: white;
+      border-color: white;
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+    }
+
+    /* シーン基本構造 (表示とポインターイベントの厳密な制御) */
+    .scene-container {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      visibility: hidden;
+      display: none;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div data-hf-id="hf-8q40" id="root" data-composition-id="hiraoka-presentation" data-width="1920" data-height="1080" data-duration="30" data-start="0">
+    
+    <!-- ==================== 0. 音声とBGMトラック (完全分離) ==================== -->
+    <audio data-hf-id="hf-27ey" id="bgm-track" src="assets/bgm.mp3" data-start="0" data-volume="0.08" loop></audio>
+    <audio data-hf-id="hf-bic6" id="voice-intro" src="assets/narration_intro.mp3" data-start="0.2" data-volume="1.0"></audio>
+    <audio data-hf-id="hf-nf8a" id="voice-a" src="assets/narration_a.mp3" data-volume="1.0"></audio>
+    <audio data-hf-id="hf-5tks" id="voice-b" src="assets/narration_b.mp3" data-volume="1.0"></audio>
+
+    <!-- 背景装飾用の光球 -->
+    <div data-hf-id="hf-xju8" id="glow-1" class="bg-glow-effect" style="left: -100px; top: -100px;"></div>
+    <div data-hf-id="hf-4exh" id="glow-2" class="bg-glow-effect" style="right: -100px; bottom: -100px; background: radial-gradient(circle, rgba(0, 240, 255, 0.08) 0%, transparent 75%);"></div>
+
+    <!-- ==================== 1. 【シーン1】イントロ・問いかけ (0.0s - 10.0s) ==================== -->
+    <div data-hf-id="hf-883c" id="scene-intro" class="clip scene-container" data-start="0" data-duration="10">
+      
+      <!-- スライドパネル -->
+      <div data-hf-id="hf-9s8a" class="slide-panel">
+        <div data-hf-id="hf-fzw2" class="slide-card">
+          <div data-hf-id="hf-6v0n" style="text-transform: uppercase; font-size: 16px; font-weight: 600; color: #9e5bfb; letter-spacing: 3px; margin-bottom: 20px;">HeyGen Ambassador Present</div>
+          <h1 data-hf-id="hf-3ckv" id="intro-title" style="font-size: 64px; font-weight: 900; line-height: 1.2; margin-bottom: 30px;">
+            みなさん、こんにちは！<br data-hf-id="hf-x5px">
+            HeyGen公式アンバサダーの<span data-hf-id="hf-ghbq" class="gradient-text-purple">平岡</span>です。
+          </h1>
+          <p data-hf-id="hf-ip6n" id="intro-desc" style="font-size: 26px; color: #a59cb9; line-height: 1.6; max-width: 900px;">
+            HeyGenには面白い使い方がたくさんあります。<br data-hf-id="hf-rsrt">
+            今日はどちらの方法を楽しく学んでいきたいですか？
+          </p>
+
+          <!-- 10.0秒時点（一時停止状態）でのみフェードインする選択肢ボタン -->
+          <div data-hf-id="hf-9k5m" id="intro-choices" class="btn-container" style="opacity: 0; visibility: hidden;">
+            <button data-hf-id="hf-bq6l" id="btn-choice-a" class="choice-btn">① アバター5 (写真アニメーション)</button>
+            <button data-hf-id="hf-qxbd" id="btn-choice-b" class="choice-btn">② HyperFrames (AI Agent制作)</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- アバター表示エリア -->
+      <div data-hf-id="hf-ep8n" class="avatar-area">
+        <div data-hf-id="hf-heja" id="wrapper-intro" class="avatar-wrapper" style="opacity: 0; transform: translateY(40px);">
+          <!-- 本番アセット用ビデオ要素 -->
+          <video data-hf-id="hf-trrw" id="video-intro" class="avatar-video" src="assets/avatar_intro.webm" data-start="0.2" muted playsinline></video>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ==================== 2. 【シーンA】アバター5解説ルート (11.0s - 18.0s) ==================== -->
+    <div data-hf-id="hf-vmor" id="scene-a" class="clip scene-container" data-start="11" data-duration="7">
+      
+      <div data-hf-id="hf-z10u" class="slide-panel">
+        <div data-hf-id="hf-ckdy" class="slide-card">
+          <div data-hf-id="hf-dhui" style="text-transform: uppercase; font-size: 16px; font-weight: 600; color: #00f0ff; letter-spacing: 3px; margin-bottom: 20px;">Chapter 1: Avatar 5</div>
+          <h2 data-hf-id="hf-ezxe" id="title-a" style="font-size: 56px; font-weight: 900; margin-bottom: 30px;">
+            自分そっくりの写真を<br data-hf-id="hf-szow"><span data-hf-id="hf-xzud" class="gradient-text-cyan">楽しく動かしてみましょう！</span>
+          </h2>
+          <p data-hf-id="hf-kurb" id="desc-a" style="font-size: 24px; color: #9bb8be; line-height: 1.7; max-width: 900px;">
+            アバター5を使うと、お気に入りのポートレートや静止画をベースに、まるで本当に喋っているかのような高精細で感情豊かなリップシンク動画を瞬時に作成できます。
+          </p>
+          <button data-hf-id="hf-og2c" id="btn-back-a" class="nav-back-btn">← メニューへ戻る</button>
+        </div>
+      </div>
+
+      <div data-hf-id="hf-uw6f" class="avatar-area">
+        <div data-hf-id="hf-47vs" id="wrapper-a" class="avatar-wrapper" style="opacity: 0;">
+          <video data-hf-id="hf-e9w8" id="video-a" class="avatar-video" src="assets/avatar_a.webm" muted playsinline></video>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ==================== 3. 【シーンB】HyperFrames解説ルート (19.0s - 26.0s) ==================== -->
+    <div data-hf-id="hf-menc" id="scene-b" class="clip scene-container" data-start="19" data-duration="7">
+      
+      <div data-hf-id="hf-zfbv" class="slide-panel">
+        <div data-hf-id="hf-cyoz" class="slide-card">
+          <div data-hf-id="hf-nikw" style="text-transform: uppercase; font-size: 16px; font-weight: 600; color: #9e5bfb; letter-spacing: 3px; margin-bottom: 20px;">Chapter 2: HyperFrames</div>
+          <h2 data-hf-id="hf-ziqx" id="title-b" style="font-size: 56px; font-weight: 900; margin-bottom: 30px;">
+            AI Agentを使って<br data-hf-id="hf-sldv"><span data-hf-id="hf-ig5d" class="gradient-text-purple">簡単に動画を作ってみましょう！</span>
+          </h2>
+          <p data-hf-id="hf-o3n8" id="desc-b" style="font-size: 24px; color: #b09ebb; line-height: 1.7; max-width: 900px;">
+            HyperFramesとエージェント（Antigravityなど）を組み合わせることで、自然言語での指示から直接HTMLベースのプレゼンやグラフアニメーションを動的にビルドし、音ズレゼロで書き出せます。
+          </p>
+          <button data-hf-id="hf-042t" id="btn-back-b" class="nav-back-btn">← メニューへ戻る</button>
+        </div>
+      </div>
+
+      <div data-hf-id="hf-uhve" class="avatar-area">
+        <div data-hf-id="hf-v4qb" id="wrapper-b" class="avatar-wrapper" style="opacity: 0;">
+          <video data-hf-id="hf-6jm0" id="video-b" class="avatar-video" src="assets/avatar_b.webm" muted playsinline></video>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- GSAP および 制御ロジックの構築 -->
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+
+    // ==================== 1. GSAPタイムラインのアニメーション定義 ====================
+
+    // --- 【共通初期化設定】 (0.0s) ---
+    tl.set("#scene-intro", { autoAlpha: 1, display: "block", pointerEvents: "auto" }, 0);
+    tl.set("#scene-a, #scene-b", { autoAlpha: 0, display: "none", pointerEvents: "none" }, 0);
+    tl.set("#intro-choices", { autoAlpha: 0, pointerEvents: "none" }, 0);
+
+    // --- 【イントロアニメーション】 (0.0s - 10.0s) ---
+    tl.to("#wrapper-intro", { opacity: 1, y: 0, duration: 1.2, ease: "power3.out" }, 0.2);
+    tl.from("#intro-title", { opacity: 0, y: -30, duration: 1.0, ease: "power3.out" }, 0.5);
+    tl.from("#intro-desc", { opacity: 0, y: 20, duration: 0.8, ease: "power3.out" }, 1.0);
+    tl.fromTo("#glow-1", { scale: 0.9, opacity: 0.6 }, { scale: 1.15, opacity: 1.0, duration: 5.0, repeat: 3, yoyo: true, ease: "sine.inOut" }, 0);
+    
+    // 選択ボタンがスムーズにフェードイン
+    tl.to("#intro-choices", { autoAlpha: 1, pointerEvents: "auto", duration: 0.6, ease: "power2.out" }, 9.4);
+    
+    // 【10.0秒時点】：一時停止
+    tl.addPause(10.0, () => { stopAllMedia(); });
+
+    // --- 【シーンA（アバター5）】 (11.0s - 18.0s) ---
+    tl.set("#scene-intro, #scene-b", { autoAlpha: 0, display: "none", pointerEvents: "none" }, 11.0);
+    tl.set("#scene-a", { display: "block", pointerEvents: "auto" }, 11.0);
+    tl.to("#scene-a", { autoAlpha: 1, duration: 0.6 }, 11.0);
+    tl.to("#wrapper-a", { opacity: 1, duration: 0.8 }, 11.2);
+    tl.from("#title-a", { opacity: 0, y: -20, duration: 0.8, ease: "power2.out" }, 11.5);
+    tl.from("#desc-a", { opacity: 0, y: 15, duration: 0.8, ease: "power2.out" }, 11.9);
+    tl.from("#btn-back-a", { opacity: 0, scale: 0.95, duration: 0.6 }, 12.3);
+
+    // 【18.0秒時点】：一時停止
+    tl.addPause(18.0, () => { stopAllMedia(); });
+
+    // --- 【シーンB（HyperFrames）】 (19.0s - 26.0s) ---
+    tl.set("#scene-intro, #scene-a", { autoAlpha: 0, display: "none", pointerEvents: "none" }, 19.0);
+    tl.set("#scene-b", { display: "block", pointerEvents: "auto" }, 19.0);
+    tl.to("#scene-b", { autoAlpha: 1, duration: 0.6 }, 19.0);
+    tl.to("#wrapper-b", { opacity: 1, duration: 0.8 }, 19.2);
+    tl.from("#title-b", { opacity: 0, x: -30, duration: 0.8, ease: "power3.out" }, 19.5);
+    tl.from("#desc-b", { opacity: 0, y: 15, duration: 0.8, ease: "power2.out" }, 19.9);
+    tl.from("#btn-back-b", { opacity: 0, scale: 0.95, duration: 0.6 }, 20.3);
+
+    // 【26.0秒時点】：一時停止
+    tl.addPause(26.0, () => { stopAllMedia(); });
+
+    tl.set({}, {}, 30.0);
+
+    // レンダラーへの登録
+    window.__timelines = window.__timelines || {};
+    window.__timelines["hiraoka-presentation"] = tl;
+
+    // ==================== 2. ナビゲーションおよび音声・映像の制御ロジック ====================
+
+    // 各種メディア要素の取得
+    const bgm = document.getElementById("bgm-track");
+    const voiceIntro = document.getElementById("voice-intro");
+    const voiceA = document.getElementById("voice-a");
+    const voiceB = document.getElementById("voice-b");
+
+    const videoIntro = document.getElementById("video-intro");
+    const videoA = document.getElementById("video-a");
+    const videoB = document.getElementById("video-b");
+
+    // 全ての音声とビデオを一括停止・初期化する関数
+    function stopAllMedia() {
+      [voiceIntro, voiceA, voiceB].forEach(audio => {
+        audio.pause();
+        audio.currentTime = 0;
+      });
+      [videoIntro, videoA, videoB].forEach(video => {
+        video.pause();
+        video.currentTime = 0;
+      });
+    }
+
+    // ナビゲーションジャンプと音声・映像の完全同期制御
+    function navigateTo(targetTime, activeVoice, activeVideo) {
+      stopAllMedia();
+      
+      if (bgm.paused) {
+        bgm.play().catch(e => console.log("BGM play error:", e));
+      }
+
+      // GSAPタイムラインをジャンプ
+      tl.play(targetTime);
+
+      // 対象音声の同期再生
+      if (activeVoice) {
+        activeVoice.currentTime = 0;
+        activeVoice.play().catch(e => console.log("Voice autoplay blocked:", e));
+      }
+
+      // 対象ビデオの同期再生
+      if (activeVideo) {
+        activeVideo.currentTime = 0;
+        activeVideo.play().catch(e => console.log("Video autoplay blocked:", e));
+      }
+    }
+
+    // --- ボタンイベントのバインド ---
+
+    // 選択A：アバター5への分岐 (11.0秒から)
+    document.getElementById("btn-choice-a").addEventListener("click", (e) => {
+      e.stopPropagation();
+      navigateTo(11.0, voiceA, videoA);
+    });
+
+    // 選択B：HyperFramesへの分岐 (19.0秒から)
+    document.getElementById("btn-choice-b").addEventListener("click", (e) => {
+      e.stopPropagation();
+      navigateTo(19.0, voiceB, videoB);
+    });
+
+    // メニューに戻る
+    document.querySelectorAll(".nav-back-btn").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        stopAllMedia();
+        tl.seek(10.0); // 選択画面（一時停止中の10秒目）に戻る
+      });
+    });
+
+    // 初回のロードおよび再生開始処理
+    let isStarted = false;
+    window.addEventListener("click", (e) => {
+      // ボタン自体のクリック時はこのリスナーの自動再生処理をスキップ
+      if (e.target.closest("button") || e.target.closest(".choice-btn") || e.target.closest(".nav-back-btn")) {
+        return;
+      }
+      
+      if (!isStarted && tl.time() === 0) {
+        isStarted = true;
+        navigateTo(0.0, voiceIntro, videoIntro);
+      }
+    });
+  </script>
+</body>
+</html>
