@@ -832,7 +832,7 @@
             if (activeVoice && !isPaused) {
               activeVoice.play().catch(e => console.log("Voice blocked:", e));
             }
-          }, 80); // リップシンク遅延補正
+          }, 200); // リップシンク遅延補正（動画デコード遅延に合わせ80msから200msへ調整）
         }).catch(e => {
           console.log("Video blocked, playing voice directly:", e);
           if (activeVoice && !isPaused) {
