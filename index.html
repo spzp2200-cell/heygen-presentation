@@ -292,16 +292,17 @@
     }
 
     /* ==================== プレミアム・スタート画面 (ブラウザ音声制限解除用ウェルカムモーダル) ==================== */
+    /* #rootの外へ移動したため、画面全体の固定配置にし、スマホでも縮小させない */
     #welcome-overlay {
-      position: absolute;
+      position: fixed;
       inset: 0;
-      background: rgba(3, 1, 8, 0.7);
-      backdrop-filter: blur(15px);
-      z-index: 999;
+      background: radial-gradient(circle at 50% 50%, rgba(13, 6, 28, 0.98) 0%, rgba(3, 1, 8, 1) 100%);
+      z-index: 9999;
       display: flex;
       justify-content: center;
       align-items: center;
-      pointer-events: auto;
+      backdrop-filter: blur(25px);
+      padding: 20px;
     }
 
     .welcome-card {
@@ -330,12 +331,44 @@
       box-shadow: 0 12px 30px rgba(99, 102, 241, 0.35);
       width: 100%;
       transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      /* 脈動する光るアニメーション */
+      animation: pulse-start-btn 2.5s infinite;
     }
 
     .welcome-start-btn:hover {
       transform: scale(1.03);
       box-shadow: 0 15px 35px rgba(99, 102, 241, 0.55);
       background: linear-gradient(135deg, #a78bfa 0%, #6366f1 100%);
+    }
+
+    /* スマートフォン表示時のレスポンシブ最適化 (デカデカと押しやすいサイズへ) */
+    @media (max-width: 768px) {
+      .welcome-card {
+        width: 100%;
+        max-width: 550px;
+        border-radius: 28px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+      }
+      .welcome-card div {
+        /* スマホ向けにカード下の余白とパディングを調整 */
+        padding: 35px 25px !important;
+      }
+      .welcome-start-btn {
+        font-size: 28px; /* 文字をより大きく */
+        padding: 25px 20px; /* タップ領域を大きく */
+        border-radius: 20px;
+        box-shadow: 0 15px 35px rgba(99, 102, 241, 0.5);
+      }
+      .welcome-card p {
+        font-size: 16px !important;
+      }
+    }
+
+    /* 脈動アニメーション定義 */
+    @keyframes pulse-start-btn {
+      0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7); }
+      70% { box-shadow: 0 0 0 20px rgba(99, 102, 241, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
     }
 
     /* ミュートボタンのプレミアムスタイル */
@@ -445,6 +478,19 @@
     </div>
   </div>
 
+  <!-- プレミアム・スタート画面 (HeyGen Ambassador Welcome Overlay) - #rootの外に移動してスマホでも大きく表示 -->
+  <div id="welcome-overlay">
+    <div class="welcome-card" id="welcome-card">
+      <img src="assets/ambassador_welcome.png" style="width: 100%; height: auto; display: block;" alt="HeyGen Ambassador Welcome">
+      <div style="padding: 45px 50px; text-align: center; width: 100%; background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);">
+        <button id="btn-start-presentation" class="welcome-start-btn">
+          プレゼンテーションをスタート (音声ON)
+        </button>
+        <p style="margin-top: 18px; font-size: 15px; color: #64748b; font-weight: 500; letter-spacing: 0.5px;">※ブラウザの音声制限を解除し、高音質な解説音声付きで開始します</p>
+      </div>
+    </div>
+  </div>
+
   <div id="root" data-composition-id="hiraoka-presentation" data-width="1920" data-height="1080" data-duration="60" data-start="0">
     
     <!-- ==================== 0. 音声とBGMトラック ==================== -->
@@ -461,19 +507,6 @@
 
     <!-- 宇宙の星ワープ（Starfield）キャンバス -->
     <canvas id="starfield"></canvas>
-
-    <!-- プレミアム・スタート画面 (HeyGen Ambassador Welcome Overlay) -->
-    <div id="welcome-overlay">
-      <div class="welcome-card" id="welcome-card">
-        <img src="assets/ambassador_welcome.png" style="width: 100%; height: auto; display: block;" alt="HeyGen Ambassador Welcome">
-        <div style="padding: 45px 50px; text-align: center; width: 100%; background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);">
-          <button id="btn-start-presentation" class="welcome-start-btn">
-            プレゼンテーションをスタート (音声ON)
-          </button>
-          <p style="margin-top: 18px; font-size: 15px; color: #64748b; font-weight: 500; letter-spacing: 0.5px;">※ブラウザの音声制限を解除し、高音質な解説音声付きで開始します</p>
-        </div>
-      </div>
-    </div>
 
     <!-- 背景装飾用の光球 -->
     <div id="glow-1" class="bg-glow-effect" style="left: -100px; top: -100px;"></div>
