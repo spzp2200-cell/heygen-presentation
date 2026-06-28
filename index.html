@@ -828,11 +828,18 @@
       if (activeVideo) {
         activeVideo.currentTime = 0;
         activeVideo.play().then(() => {
+          // アバターごとの個別リップシンク遅延マップ
+          let lipsyncDelay = 200; // デフォルト (イントロ、ルートA用)
+          
+          if (activeVideo.id === "avatar-video-b") {
+            lipsyncDelay = 320; // ルートB用 (デコード遅延が大きいため320msに遅らせて完璧に同期)
+          }
+
           setTimeout(() => {
             if (activeVoice && !isPaused) {
               activeVoice.play().catch(e => console.log("Voice blocked:", e));
             }
-          }, 200); // リップシンク遅延補正（動画デコード遅延に合わせ80msから200msへ調整）
+          }, lipsyncDelay);
         }).catch(e => {
           console.log("Video blocked, playing voice directly:", e);
           if (activeVoice && !isPaused) {
