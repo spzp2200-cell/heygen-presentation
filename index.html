@@ -448,10 +448,10 @@
   <div id="root" data-composition-id="hiraoka-presentation" data-width="1920" data-height="1080" data-duration="60" data-start="0">
     
     <!-- ==================== 0. 音声とBGMトラック ==================== -->
-    <audio id="bgm-track" src="assets/bgm.mp3" data-start="0" data-volume="0.06" loop></audio>
-    <audio id="audio-intro" src="assets/narration_intro.mp3" data-start="0.2" data-volume="1.0"></audio>
-    <audio id="audio-a" src="assets/narration_a.mp3" data-start="17.2" data-volume="1.0"></audio>
-    <audio id="audio-b" src="assets/narration_b.mp3" data-start="40.2" data-volume="1.0"></audio>
+    <audio id="bgm-track" src="assets/bgm.mp3" data-start="0" data-volume="0.06" preload="auto" loop></audio>
+    <audio id="audio-intro" src="assets/narration_intro.mp3" data-start="0.2" data-volume="1.0" preload="auto"></audio>
+    <audio id="audio-a" src="assets/narration_a.mp3" data-start="17.2" data-volume="1.0" preload="auto"></audio>
+    <audio id="audio-b" src="assets/narration_b.mp3" data-start="40.2" data-volume="1.0" preload="auto"></audio>
 
     <!-- 一時停止 / 再生 コントロールボタン -->
     <button id="btn-pause-control" class="mute-control-btn">
@@ -797,14 +797,12 @@
         activeVideo.play().then(() => {
           setTimeout(() => {
             if (activeVoice && !isPaused) {
-              activeVoice.currentTime = 0;
               activeVoice.play().catch(e => console.log("Voice blocked:", e));
             }
           }, 80); // リップシンク遅延補正
         }).catch(e => {
           console.log("Video blocked, playing voice directly:", e);
           if (activeVoice && !isPaused) {
-            activeVoice.currentTime = 0;
             activeVoice.play().catch(e => console.log(e));
           }
         });
@@ -871,15 +869,6 @@
 
       // 音声をONにして即座にスタート！
       startPresentation();
-    });
-
-    tl.eventCallback("onUpdate", () => {
-      const time = tl.time();
-      if (time > 0 && time < 16.5 && isStarted) {
-        if (voiceIntro && voiceIntro.paused && !voiceIntro.ended) {
-          voiceIntro.play().catch(() => {});
-        }
-      }
     });
 
     // ==================== 3. Canvas 3D Starfield Warp (宇宙の星ワープ) システム ====================
