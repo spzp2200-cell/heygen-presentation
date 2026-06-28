@@ -373,9 +373,77 @@
       border-color: rgba(239, 68, 68, 0.4);
       color: #f87171;
     }
+
+    /* LINE内蔵ブラウザ案内オーバーレイ */
+    #line-browser-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(3, 1, 8, 0.98);
+      z-index: 10000;
+      display: none; /* デフォルト非表示 */
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 40px;
+      text-align: center;
+      color: white;
+      backdrop-filter: blur(20px);
+    }
+
+    .line-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 32px;
+      padding: 50px 40px;
+      max-width: 650px;
+      width: 100%;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    }
+
+    .line-instruction-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 36px;
+      font-weight: 800;
+      color: #ffffff;
+      margin-bottom: 25px;
+      line-height: 1.3;
+    }
+
+    .line-instruction-step {
+      font-size: 22px;
+      color: #cbd5e1;
+      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+
+    .line-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      background: #2563eb;
+      color: white;
+      border-radius: 10px;
+      font-weight: bold;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
   </style>
 </head>
 <body>
+
+  <!-- LINE内蔵ブラウザ用案内オーバーレイ -->
+  <div id="line-browser-overlay">
+    <div class="line-card">
+      <div class="line-badge">iPhoneをご利用の方へ</div>
+      <div class="line-instruction-title">Safariで開いてください</div>
+      <div class="line-instruction-step">
+        LINEアプリのブラウザ制限により、音声やアバター映像が正しく再生されない場合があります。
+      </div>
+      <div class="line-instruction-step" style="background: rgba(255, 255, 255, 0.03); padding: 25px; border-radius: 20px; border: 1px dashed rgba(255, 255, 255, 0.2); font-weight: 600;">
+        👉 画面右上の <span style="font-size: 28px; vertical-align: middle;">「…」</span> ボタンをタップし、<br>
+        <span style="color: #60a5fa;">「デフォルトのブラウザで開く」</span> または <span style="color: #60a5fa;">「Safariで開く」</span> を選択してください。
+      </div>
+    </div>
+  </div>
 
   <div id="root" data-composition-id="hiraoka-presentation" data-width="1920" data-height="1080" data-duration="60" data-start="0">
     
@@ -537,6 +605,30 @@
   <!-- GSAP および 制御ロジックの構築 -->
   <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
   <script>
+    // LINE内蔵ブラウザ検知・バイパスシステム (即時実行)
+    (function() {
+      const ua = navigator.userAgent.toLowerCase();
+      const isLine = ua.indexOf("line/") > -1;
+      const isAndroid = ua.indexOf("android") > -1;
+      const isIphone = ua.indexOf("iphone") > -1 || ua.indexOf("ipad") > -1;
+
+      if (isLine) {
+        if (isAndroid) {
+          // Androidの場合：直接Chromeを強制起動させてリダイレクト
+          const targetUrl = "intent://spzp2200-cell.github.io/heygen-presentation/#Intent;scheme=https;package=com.android.chrome;end";
+          window.location.replace(targetUrl);
+        } else if (isIphone) {
+          // iOSの場合：DOMが構築された後に案内用オーバーレイを表示
+          window.addEventListener("DOMContentLoaded", () => {
+            const overlay = document.getElementById("line-browser-overlay");
+            if (overlay) {
+              overlay.style.display = "flex";
+            }
+          });
+        }
+      }
+    })();
+
     const tl = gsap.timeline({ paused: true });
 
     // ==================== 1. GSAPタイムラインのアニメーション定義 ====================
