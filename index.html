@@ -31,7 +31,11 @@
 
     /* 16:9 巨大ステージコンテナ (宇宙の星が映えるディープネイビー背景) */
     #root {
-      position: relative;
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%) scale(1);
+      transform-origin: center center;
       width: 1920px;
       height: 1080px;
       background: radial-gradient(circle at 50% 50%, #0d061c 0%, #030108 100%);
@@ -844,6 +848,29 @@
       }
       requestAnimationFrame(updateStarfield);
     }
+
+    // --- 画面アスペクト比維持自動スケーリングシステム ---
+    function resizePresentation() {
+      const root = document.getElementById("root");
+      const baseWidth = 1920;
+      const baseHeight = 1080;
+      const windowWidth = window.innerWidth;
+      const windowHeight = window.innerHeight;
+
+      // 画面幅と画面高さに収めるための倍率を計算（アスペクト比維持）
+      const scaleX = windowWidth / baseWidth;
+      const scaleY = windowHeight / baseHeight;
+      const scale = Math.min(scaleX, scaleY); // 画面をはみ出さないように小さい方の比率を適用
+
+      // 中央配置の translate と計算した scale を同時に適用
+      root.style.transform = `translate(-50%, -50%) scale(${scale})`;
+    }
+
+    // 読み込み時およびリサイズ時に自動調整
+    window.addEventListener("resize", resizePresentation);
+    window.addEventListener("DOMContentLoaded", resizePresentation);
+    // 即時実行
+    resizePresentation();
 
     window.addEventListener("resize", () => {
       width = canvas.width = 1920;
