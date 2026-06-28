@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>HeyGen & HyperFrames Interactive Presentation</title>
   <!-- Google Fonts プレミアムタイポグラフィ -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -34,9 +34,10 @@
 
     /* 16:9 巨大ステージコンテナ (宇宙の星が映えるディープネイビー背景) */
     #root {
-      position: relative;
-      flex-shrink: 0;
-      transform: scale(1);
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%) scale(1);
       transform-origin: center center;
       width: 1920px;
       height: 1080px;
@@ -874,8 +875,8 @@
       const scaleY = windowHeight / baseHeight;
       const scale = Math.min(scaleX, scaleY); // 画面をはみ出さないように小さい方の比率を適用
 
-      // Flexboxが自動で中央配置するため、translateは排除し、純粋にscaleのみを適用
-      root.style.transform = `scale(${scale})`;
+      // 重要：中心点を常に画面の中央に固定したまま、きれいにスケーリングする
+      root.style.transform = `translate(-50%, -50%) scale(${scale})`;
     }
 
     // 読み込み時およびリサイズ時に自動調整
