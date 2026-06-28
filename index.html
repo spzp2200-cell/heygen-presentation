@@ -26,15 +26,17 @@
       justify-content: center;
       align-items: center;
       height: 100vh;
+      height: 100dvh; /* モバイルブラウザのアドレスバー変動を考慮 */
       width: 100vw;
+      margin: 0;
+      padding: 0;
     }
 
     /* 16:9 巨大ステージコンテナ (宇宙の星が映えるディープネイビー背景) */
     #root {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%) scale(1);
+      position: relative;
+      flex-shrink: 0;
+      transform: scale(1);
       transform-origin: center center;
       width: 1920px;
       height: 1080px;
@@ -382,10 +384,10 @@
     <audio id="audio-a" src="assets/narration_a.mp3" data-start="17.2" data-volume="1.0"></audio>
     <audio id="audio-b" src="assets/narration_b.mp3" data-start="40.2" data-volume="1.0"></audio>
 
-    <!-- 音声ミュート切り替えコントロールボタン -->
-    <button id="btn-mute-control" class="mute-control-btn">
-      <span class="mute-icon">🔊</span>
-      <span class="mute-text">Mute</span>
+    <!-- 一時停止 / 再生 コントロールボタン -->
+    <button id="btn-pause-control" class="mute-control-btn">
+      <span class="pause-icon">⏸</span>
+      <span class="pause-text">Pause</span>
     </button>
 
     <!-- 宇宙の星ワープ（Starfield）キャンバス -->
@@ -628,34 +630,43 @@
     const videoA = document.getElementById("video-a");
     const videoB = document.getElementById("video-b");
 
-    // 音声ミュート（消音）管理システム
-    let isMuted = false;
-    const muteBtn = document.getElementById("btn-mute-control");
-    const allAudioElements = [bgm, voiceIntro, voiceA, voiceB];
+    // 音声およびアバター解説の一時停止・再生管理システム
+    let currentActiveVoice = null;
+    let currentActiveVideo = null;
+    let isPaused = false;
 
-    function applyMuteState() {
-      allAudioElements.forEach(audio => {
-        if (audio) {
-          audio.muted = isMuted;
-        }
-      });
+    const pauseBtn = document.getElementById("btn-pause-control");
 
-      // UI表示の切り替え
-      if (isMuted) {
-        muteBtn.classList.add("is-muted");
-        muteBtn.querySelector(".mute-icon").textContent = "🔇";
-        muteBtn.querySelector(".mute-text").textContent = "Unmute";
+    function applyPauseState() {
+      if (isPaused) {
+        // 一時停止処理
+        tl.pause();
+        if (currentActiveVoice) currentActiveVoice.pause();
+        if (currentActiveVideo) currentActiveVideo.pause();
+        bgm.pause();
+
+        // UI表示の切り替え
+        pauseBtn.classList.add("is-muted"); // 赤い警告枠のスタイルを一時停止中として流用
+        pauseBtn.querySelector(".pause-icon").textContent = "▶";
+        pauseBtn.querySelector(".pause-text").textContent = "Play";
       } else {
-        muteBtn.classList.remove("is-muted");
-        muteBtn.querySelector(".mute-icon").textContent = "🔊";
-        muteBtn.querySelector(".mute-text").textContent = "Mute";
+        // 再生再開処理
+        tl.play();
+        if (currentActiveVoice) currentActiveVoice.play().catch(e => console.log(e));
+        if (currentActiveVideo) currentActiveVideo.play().catch(e => console.log(e));
+        if (bgm.paused) bgm.play().catch(e => console.log(e));
+
+        // UI表示の切り替え
+        pauseBtn.classList.remove("is-muted");
+        pauseBtn.querySelector(".pause-icon").textContent = "⏸";
+        pauseBtn.querySelector(".pause-text").textContent = "Pause";
       }
     }
 
-    muteBtn.addEventListener("click", (e) => {
+    pauseBtn.addEventListener("click", (e) => {
       e.stopPropagation();
-      isMuted = !isMuted;
-      applyMuteState();
+      isPaused = !isPaused;
+      applyPauseState();
     });
 
     function stopAllMedia() {
@@ -675,9 +686,12 @@
 
     function navigateTo(targetTime, activeVoice, activeVideo) {
       stopAllMedia();
+      currentActiveVoice = activeVoice;
+      currentActiveVideo = activeVideo;
       
-      // 再生開始前に現在のミュート設定を強制適用
-      applyMuteState();
+      // 新しいシーンへ遷移する際は自動的に一時停止を解除
+      isPaused = false;
+      applyPauseState();
       
       if (bgm.paused) {
         bgm.play().catch(e => console.log("BGM play error:", e));
@@ -689,17 +703,15 @@
         activeVideo.currentTime = 0;
         activeVideo.play().then(() => {
           setTimeout(() => {
-            if (activeVoice) {
+            if (activeVoice && !isPaused) {
               activeVoice.currentTime = 0;
-              activeVoice.muted = isMuted; // 再生開始時に確実にミュート状態を反映
               activeVoice.play().catch(e => console.log("Voice blocked:", e));
             }
           }, 80); // リップシンク遅延補正
         }).catch(e => {
           console.log("Video blocked, playing voice directly:", e);
-          if (activeVoice) {
+          if (activeVoice && !isPaused) {
             activeVoice.currentTime = 0;
-            activeVoice.muted = isMuted; // 再生開始時に確実にミュート状態を反映
             activeVoice.play().catch(e => console.log(e));
           }
         });
@@ -862,8 +874,8 @@
       const scaleY = windowHeight / baseHeight;
       const scale = Math.min(scaleX, scaleY); // 画面をはみ出さないように小さい方の比率を適用
 
-      // 中央配置の translate と計算した scale を同時に適用
-      root.style.transform = `translate(-50%, -50%) scale(${scale})`;
+      // Flexboxが自動で中央配置するため、translateは排除し、純粋にscaleのみを適用
+      root.style.transform = `scale(${scale})`;
     }
 
     // 読み込み時およびリサイズ時に自動調整
